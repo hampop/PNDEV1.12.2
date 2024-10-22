@@ -1,0 +1,47 @@
+{
+	"name": "Trimerus",
+	"read_by_default": true,
+	"icon": "paleopedia:textures/items/trimerus_icon.png",
+	"category": "lepidodendron:silurian_animal",
+	"turnin": "lepidodendron:pf_adv_book_trimerus",
+	"pages": [
+		{
+			"trigger": "lepidodendron:pf_adv_book_trimerus",
+			"title": "Trimerus",
+			"type": "quest",
+			"text": "$(l)Temporal Range:$() Silurian-Devonian$(br2)>Trilobita$(br)>Phacopida$(br)>Homalonotidae"
+		},
+		{
+			"type": "entity",
+			"name": "T. dekayi",
+			"entity": "lepidodendron:prehistoric_flora_trimerus",
+			"rotate": false,
+			"default_rotation": 0
+		},
+		{
+			"advancement": "lepidodendron:pf_adv_book_trimerus",
+			"type": "text",
+			"text": "Trimerus is a small trilobite from the Silurian to Devonian periods. Its body had many little segments and it was a benthic feeder."
+		},
+		{
+			"type": "lepidodendron:diet",
+			"mob": "lepidodendron:prehistoric_flora_trimerus"
+		},
+		{
+			"type": "lepidodendron:biomelocations1",
+			"mob": "lepidodendron:prehistoric_flora_trimerus"
+		},
+		{
+			"type": "lepidodendron:biomelocations2",
+			"mob": "lepidodendron:prehistoric_flora_trimerus"
+		},
+		{
+			"type": "lepidodendron:biomelocations3",
+			"mob": "lepidodendron:prehistoric_flora_trimerus"
+		},
+		{
+			"type": "lepidodendron:biomelocations4",
+			"mob": "lepidodendron:prehistoric_flora_trimerus"
+		}
+	]
+}

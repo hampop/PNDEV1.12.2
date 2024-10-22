@@ -1,0 +1,33 @@
+{
+	"name": "Permian Deep Ocean",
+	"read_by_default": true,
+	"icon": "paleopedia:textures/category_icon/icon_permian.png",
+	"category": "lepidodendron:permian_biome",
+	"pages": [
+		{
+			"type": "text",
+			"title": "Permian Deep Ocean",
+			"text": ""
+		},
+		{
+			"type": "lepidodendron:biomespawns1",
+			"biome": "lepidodendron:permian_ocean"
+		},
+		{
+			"type": "lepidodendron:biomespawns2",
+			"biome": "lepidodendron:permian_ocean"
+		},
+		{
+			"type": "lepidodendron:biomespawns3",
+			"biome": "lepidodendron:permian_ocean"
+		},
+		{
+			"type": "lepidodendron:biomespawns4",
+			"biome": "lepidodendron:permian_ocean"
+		},
+		{
+			"type": "lepidodendron:biomespawns5",
+			"biome": "lepidodendron:permian_ocean"
+		}
+	]
+}

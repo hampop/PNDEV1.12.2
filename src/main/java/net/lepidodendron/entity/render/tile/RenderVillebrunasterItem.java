@@ -3,6 +3,7 @@ package net.lepidodendron.entity.render.tile;
 import net.lepidodendron.LepidodendronMod;
 import net.lepidodendron.block.BlockVillebrunaster;
 import net.lepidodendron.entity.model.tile.ModelVillebrunasterItem;
+import net.lepidodendron.entity.render.entity.RenderVillebrunaster;
 import net.minecraft.block.BlockDirectional;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.client.Minecraft;
@@ -23,18 +24,22 @@ public class RenderVillebrunasterItem extends TileEntitySpecialRenderer<BlockVil
     @Override
     public void render(BlockVillebrunaster.TileEntityCustom entity, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
         int currentRotation = 0;
-        if (entity != null && entity.hasWorld()) {
+        if (entity != null && entity.hasWorld() && entity.getWorld().getBlockState(entity.getPos()).getBlock() == BlockVillebrunaster.block) {
             currentRotation = entity.getTileData().getInteger("rotation");
         }
         this.bindTexture(TEXTURE);
         ModelVillebrunasterItem modelVillebrunasterItem = this.modelVillebrunasterItem;
-        double scale = 0.04D;
+        double scale = RenderVillebrunaster.getScaler() * 0.0625F;;
         GlStateManager.pushMatrix();
-        GlStateManager.translate(x + 0.5, y - 0.05, z + 0.5);
+        GlStateManager.enableAlpha();
+        GlStateManager.enableRescaleNormal();
+        GlStateManager.translate(x + 0.5, y - 0.00, z + 0.5);
         GlStateManager.scale(scale,scale,scale);
         GlStateManager.rotate(180, 0F, 0F, 1F);
         GlStateManager.rotate(currentRotation, 0F, 1F, 0F);
         modelVillebrunasterItem.renderAll(Minecraft.getMinecraft().player.ticksExisted);
+        GlStateManager.disableAlpha();
+        GlStateManager.disableRescaleNormal();
         GlStateManager.popMatrix();
     }
 }

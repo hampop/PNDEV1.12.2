@@ -48,6 +48,7 @@ public class LepidodendronConfig {
     public static boolean submarineNightvision = true;
     public static boolean submarineInvisibility = true;
     public static boolean doGrazeGrief = true;
+    public static int[] dimFireSpreadBlacklist = new int[0];
 
     public static boolean genFossil = true;
     public static boolean genStone = true;
@@ -83,6 +84,7 @@ public class LepidodendronConfig {
     public static int attackHealth = 90;
     public static int adultAge = 75;
     public static int breedCooldown = 6000;
+    public static int nestSearch = 32;
     public static double spawnerDensity = 1.0;
     public static boolean attackPlayerAlways = false;
     public static boolean doLowRes = false;
@@ -589,7 +591,10 @@ public class LepidodendronConfig {
         breedCooldown = prop.getInt();
         propOrder.add(prop.getName());
 
-
+        prop = cfg.get("Global Mobs", "nestSearch", nestSearch);
+        prop.setComment("For creatures which have nests, this is the radius of search they make to locate a new nest. If you get lag, try reducing this [default: 32 (8 to 64 limits)]");
+        nestSearch = prop.getInt();
+        propOrder.add(prop.getName());
 
         prop = cfg.get("Global World-Gen", "spawnerDensity", spawnerDensity);
         prop.setComment("This number multiplies the default rate of spawning used by the mod's spawner (0-100). Recommended you do not change this. Increasing it will spawn more mobs, but as they do not despawn your PC may struggle. Use at your own risk. [default: 1.0]");
@@ -745,6 +750,10 @@ public class LepidodendronConfig {
         prop = cfg.get("WorldGen Lepidodendron", "digSiteRarity", digsiteRarity);
         prop.setComment("One in this many chunks will try to generate a digsite, or set to zero to disable (note, most attempts will fail due to unsuitable terrain) [default: 50]");
         digsiteRarity = prop.getInt();
+        propOrder.add(prop.getName());
+        prop = cfg.get("Global World-Gen", "dimFireSpreadBlacklist", dimFireSpreadBlacklist);
+        prop.setComment("A list of dimensions IDs where you want to stop fire from being able to spread. [default: empty]");
+        dimFireSpreadBlacklist = prop.getIntList();
         propOrder.add(prop.getName());
 
 

@@ -1,0 +1,47 @@
+{
+	"name": "Xenacanthus",
+	"read_by_default": true,
+	"icon": "paleopedia:textures/items/xenacanthus_icon.png",
+	"category": "lepidodendron:carboniferous_animal",
+	"turnin": "lepidodendron:pf_adv_book_xenacanthus",
+	"pages": [
+		{
+			"trigger": "lepidodendron:pf_adv_book_xenacanthus",
+			"title": "Xenacanthus",
+			"type": "quest",
+			"text": "$(l)Temporal Range:$() Carboniferous-Permian(br2)>Chondrichthyes$(br)>Selachimorpha$(br)>Xenacanthida$(br)>Xenacanthidae"
+		},
+		{
+			"type": "entity",
+			"name": "Xenacanthus sp.",
+			"entity": "lepidodendron:prehistoric_flora_xenacanthus",
+			"rotate": false,
+			"default_rotation": 0
+		},
+		{
+			"advancement": "lepidodendron:pf_adv_book_xenacanthus",
+			"type": "text",
+			"text": "Xenacanthus is a genus of widespread xenacanth shark, being found from the early Carboniferous to Permian periods. Xenacanthus had a long, snakelike body and a single barbed dorsal fin which extended the length of the body. Records of Triassic Xenacanthus have now been reassigned to the genus Mooreodontus. This animal is known from multiple complete specimens in the paleozoic."
+		},
+		{
+			"type": "lepidodendron:diet",
+			"mob": "lepidodendron:prehistoric_flora_xenacanthus"
+		},
+		{
+			"type": "lepidodendron:biomelocations1",
+			"mob": "lepidodendron:prehistoric_flora_xenacanthus"
+		},
+		{
+			"type": "lepidodendron:biomelocations2",
+			"mob": "lepidodendron:prehistoric_flora_xenacanthus"
+		},
+		{
+			"type": "lepidodendron:biomelocations3",
+			"mob": "lepidodendron:prehistoric_flora_xenacanthus"
+		},
+		{
+			"type": "lepidodendron:biomelocations4",
+			"mob": "lepidodendron:prehistoric_flora_xenacanthus"
+		}
+	]
+}
