@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 public class BiomeSpawns {
@@ -31,6 +32,19 @@ public class BiomeSpawns {
             return "";
         }
         String[] mobList = EntityLists.mobString(biome);
+        if (biomeID.equalsIgnoreCase("lepidodendron:jurassic_island_large_field")) {
+            //Need to combine several biomes together for this one!
+            ObjectArrayList<String> spawnListJoiner = new ObjectArrayList<String>(Arrays.asList(mobList));
+            biome = Biome.REGISTRY.getObject(new ResourceLocation("lepidodendron:jurassic_island_large_scrub"));
+            String[] mobList1 = EntityLists.mobString(biome);
+            ObjectArrayList<String> spawnListJoiner1 = new ObjectArrayList<String>(Arrays.asList(mobList1));
+            biome = Biome.REGISTRY.getObject(new ResourceLocation("lepidodendron:jurassic_island_large_wet"));
+            String[] mobList2 = EntityLists.mobString(biome);
+            ObjectArrayList<String> spawnListJoiner2 = new ObjectArrayList<String>(Arrays.asList(mobList2));
+            spawnListJoiner.addAll(spawnListJoiner1);
+            spawnListJoiner.addAll(spawnListJoiner2);
+            mobList = spawnListJoiner.toArray(mobList);
+        }
         ObjectArrayList<String> spawnListInterim = new ObjectArrayList<String>();
         if (mobList.length >= 1) {
             for (String entry : mobList) {
@@ -38,7 +52,7 @@ public class BiomeSpawns {
                 String strNBT = "";
                 if (entry.indexOf("{") >= 0) {
                     entryName = entry.substring(0, entry.indexOf("{"));
-                    strNBT = entry.substring(entry.indexOf("{"), entry.indexOf("}") + 1);
+                    strNBT = entry.substring(entry.indexOf("{"), entry.indexOf("}:") + 1);
                 }
                 if (entryName.indexOf(":", entryName.indexOf(":") + 1) >= 0) {
                     entryName = entryName.substring(0, entryName.indexOf(":", entryName.indexOf(":") + 1));
@@ -52,14 +66,15 @@ public class BiomeSpawns {
                     }
                     if (entry.contains("lepidodendron:prehistoric_flora_turboscinetes")) {
                         //They school with this
-                        EntityEntry ee = ForgeRegistries.ENTITIES.getValue(new ResourceLocation("lepidodendron:prehistoric_flora_piranhamesodon"));
-                        EntityLiving entity = (EntityLiving) ee.newInstance(null);
-                        if (entity != null) {
-                            spawnListInterim.add(entity.getName());
-                            entity.setDead();
+                        String mobNameT[] = getMobName("lepidodendron:prehistoric_flora_piranhamesodon", "");
+                        if (mobNameT != null) {
+                            for (String name : mobNameT) {
+                                if (!spawnListInterim.contains(name)) {
+                                    spawnListInterim.add(name);
+                                }
+                            }
                         }
                     }
-
                 }
             }
             Collections.sort(spawnListInterim);
@@ -68,7 +83,7 @@ public class BiomeSpawns {
             }
             if (from + 1 <= spawnListInterim.size()) {
                 for (int i = from; i <= to; i++) {
-                    spawnListFinal = spawnListFinal + "$(li)" + spawnListInterim.get(i) + "$(br)";
+                    spawnListFinal = spawnListFinal + spawnListInterim.get(i) + "$(br)";
                 }
             }
             if (spawnListFinal.length() >= 1) {
@@ -116,26 +131,51 @@ public class BiomeSpawns {
                                 type = nbttagcompound.getString("PNType");
                             }
                             if (!type.equalsIgnoreCase("")) {
-                                mobArray.add("$(l:mobs/" + mobStr.substring(mobStr.indexOf(":") + 1, mobStr.length()).replace("prehistoric_flora_", "") + "_" + type + ")" + entity.getName() + "$(/l)");
+                                if (!mobArray.contains("$(l:mobs/" + getHyperlink(mobStr + "_" + type) + ")" + entity.getName() + "$(/l)")) {
+                                    mobArray.add("$(l:mobs/" + getHyperlink(mobStr + "_" + type) + ")" + entity.getName() + "$(/l)");
+                                }
                             }
                             else {
-                                mobArray.add("$(l:mobs/" + mobStr.substring(mobStr.indexOf(":") + 1, mobStr.length()).replace("prehistoric_flora_", "") + ")" + entity.getName() + "$(/l)");
+                                if (!mobArray.contains("$(l:mobs/" + getHyperlink(mobStr) + ")" + entity.getName() + "$(/l)")) {
+                                    mobArray.add("$(l:mobs/" + getHyperlink(mobStr) + ")" + entity.getName() + "$(/l)");
+                                }
                             }
                         }
                         mobName = mobArray.toArray(mobName);
                     }
                     else {
-                        mobName = new String[]{"$(l:mobs/" + mobStr.substring(mobStr.indexOf(":") + 1, mobStr.length()).replace("prehistoric_flora_", "")  + ")" + entity.getName() + "$(/l)"};
+                        mobName = new String[]{"$(l:mobs/" + getHyperlink(mobStr)  + ")" + entity.getName() + "$(/l)"};
                     }
                 }
                 else {
-                    mobName = new String[]{"$(l:mobs/" + mobStr.substring(mobStr.indexOf(":") + 1, mobStr.length()).replace("prehistoric_flora_", "")  + ")" + entity.getName() + "$(/l)"};
+                    mobName = new String[]{"$(l:mobs/" + getHyperlink(mobStr)  + ")" + entity.getName() + "$(/l)"};
                 }
                 entity.setDead();
                 return mobName;
             }
         }
         return null;
+    }
+
+    public static String getHyperlink(String mobStr) {
+        if (mobStr.equalsIgnoreCase("lepidodendron:prehistoric_flora_jellyfish_precambrian")
+                || mobStr.equalsIgnoreCase("lepidodendron:prehistoric_flora_palaeojelly1")
+                || mobStr.equalsIgnoreCase("lepidodendron:prehistoric_flora_palaeojelly2")
+                || mobStr.equalsIgnoreCase("lepidodendron:prehistoric_flora_palaeojelly3")) {
+            return "ancientjelly";
+        }
+        if (mobStr.equalsIgnoreCase("lepidodendron:prehistoric_flora_notostracan_triops1")
+                || mobStr.equalsIgnoreCase("lepidodendron:prehistoric_flora_notostracan_triops2")
+                || mobStr.equalsIgnoreCase("lepidodendron:prehistoric_flora_notostracan_triops3")) {
+            return "triops";
+        }
+        if (mobStr.contains("_dragonfly_")) {
+            return "dragonfly";
+        }
+        if (mobStr.contains("_roachoid_")) {
+            return "roach";
+        }
+        return mobStr.substring(mobStr.indexOf(":") + 1, mobStr.length()).replace("prehistoric_flora_", "");
     }
 
 }
