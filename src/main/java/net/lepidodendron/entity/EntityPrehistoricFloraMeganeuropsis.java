@@ -16,6 +16,7 @@ import net.lepidodendron.entity.render.entity.RenderMeganeuropsis;
 import net.lepidodendron.entity.render.tile.RenderDisplays;
 import net.lepidodendron.entity.util.ITrappableAir;
 import net.lepidodendron.util.CustomTrigger;
+import net.lepidodendron.util.EggLayingConditions;
 import net.lepidodendron.util.ModTriggers;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.model.ModelBase;
@@ -70,6 +71,11 @@ public class EntityPrehistoricFloraMeganeuropsis extends EntityPrehistoricFloraI
 		super(world);
 		setSize(0.55F, 0.42F);
 		ATTACK_ANIMATION = Animation.create(this.getAttackLength());
+	}
+
+	@Override
+	public int getEggType(@Nullable String variantIn) {
+		return 21; //cross model
 	}
 
 	@Nullable
@@ -182,6 +188,13 @@ public class EntityPrehistoricFloraMeganeuropsis extends EntityPrehistoricFloraI
 				if (this.world.getDifficulty() == EnumDifficulty.PEACEFUL || player.isCreative()) {
 					this.setAttackTarget(null);
 				}
+				if (player.capabilities.disableDamage) {
+					this.setAttackTarget(null);
+				}
+				if (player.isInvisible()) {
+					this.setAttackTarget(null);
+				}
+
 			}
 		}
 
@@ -204,6 +217,8 @@ public class EntityPrehistoricFloraMeganeuropsis extends EntityPrehistoricFloraI
 		else {
 			this.setWillHunt(HealthRatio <= (float) aHealth);
 		}
+
+		EggLayingConditions.layWaterBottomEggsNoPause(this);
 	}
 
 	public void launchAttack() {
@@ -389,10 +404,15 @@ public class EntityPrehistoricFloraMeganeuropsis extends EntityPrehistoricFloraI
 		@Override
 		public boolean shouldExecute() {
 			EntityLivingBase target = EntityPrehistoricFloraMeganeuropsis.this.getAttackTarget();
-			if (target == null || !target.isEntityAlive()) {
+			if (target == null || (!target.isEntityAlive()) || target.isInvisible()) {
 				return false;
 			} else if (EntityPrehistoricFloraMeganeuropsis.this.world.getDifficulty() == EnumDifficulty.PEACEFUL && target instanceof EntityPlayer) {
 				return false;
+			}
+			else if (target instanceof EntityPlayer) {
+				if (((EntityPlayer)target).capabilities.disableDamage) {
+					return false;
+				}
 			}
 			this.currentPath = EntityPrehistoricFloraMeganeuropsis.this.getNavigator().getPathToEntityLiving(target);
 			return this.currentPath != null;

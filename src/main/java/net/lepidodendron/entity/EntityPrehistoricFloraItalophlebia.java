@@ -5,11 +5,10 @@ import net.ilexiconn.llibrary.client.model.tools.ChainBuffer;
 import net.ilexiconn.llibrary.server.animation.Animation;
 import net.lepidodendron.LepidodendronMod;
 import net.lepidodendron.block.BlockGlassJar;
-import net.lepidodendron.block.BlockInsectEggsItalophlebia;
 import net.lepidodendron.entity.ai.DietString;
 import net.lepidodendron.entity.base.EntityPrehistoricFloraInsectFlyingBase;
 import net.lepidodendron.entity.util.ITrappableAir;
-import net.minecraft.block.state.IBlockState;
+import net.lepidodendron.util.EggLayingConditions;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.item.ItemStack;
@@ -45,6 +44,11 @@ public class EntityPrehistoricFloraItalophlebia extends EntityPrehistoricFloraIn
 		setSize(0.3F, 0.2F);
 	}
 
+	@Override
+	public int getEggType(@Nullable String variantIn) {
+		return 21; //cross model
+	}
+
 	public void onEntityUpdate() {
 		if (!world.isRemote) {
 			if (this.hoverTick > 0) {
@@ -71,6 +75,8 @@ public class EntityPrehistoricFloraItalophlebia extends EntityPrehistoricFloraIn
 				this.motionZ = 0;
 			}
 		}
+
+		EggLayingConditions.layWaterBottomEggsNoPause(this);
 	}
 
 	@Override
