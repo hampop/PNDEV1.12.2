@@ -169,9 +169,9 @@ public class WorldGenAncientMoss extends WorldGenerator
 					"lepidodendron:prehistoric_flora_myriapod@pneumodesmus",
 					"lepidodendron:prehistoric_flora_palaeontinid",
 					"lepidodendron:prehistoric_flora_pycnophlebia",
-					"lepidodendron:prehistoric_flora_titanoptera@clatrotitan",
-					"lepidodendron:prehistoric_flora_titanoptera@gigatitan",
-					"lepidodendron:prehistoric_flora_titanoptera@mesotitan",
+					"lepidodendron:prehistoric_flora_titanoptera_nymph@clatrotitan",
+					"lepidodendron:prehistoric_flora_titanoptera_nymph@gigatitan",
+					"lepidodendron:prehistoric_flora_titanoptera_nymph@mesotitan",
 					"lepidodendron:prehistoric_flora_trigonotarbid_cryptomartus",
 					"lepidodendron:prehistoric_flora_trigonotarbid_eophrynus",
 					"lepidodendron:prehistoric_flora_trigonotarbid_kreischeria",
@@ -183,7 +183,14 @@ public class WorldGenAncientMoss extends WorldGenerator
 
 			ArrayList<String> mobStringValid = new ArrayList<String>();
 			for (String mob : mobString) {
-				if (SpawnLocations.spawnsHere(mob, biome.getRegistryName().toString())) {
+				String spawnMob = mob;
+				if (spawnMob.indexOf("_nymph") >= 1) {
+					spawnMob = spawnMob.replace("_nymph", "");
+				}
+				if (mob.contains("lepidodendron:prehistoric_flora_dragonfly")) {
+					spawnMob = "lepidodendron:prehistoric_flora_dragonfly";
+				}
+				if (SpawnLocations.spawnsHere(spawnMob, biome.getRegistryName().toString())) {
 					mobStringValid.add(mob);
 				}
 			}
