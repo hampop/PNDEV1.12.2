@@ -51,6 +51,10 @@ public class ElementsLepidodendronMod implements IFuelHandler, IWorldGenerator {
 				new net.minecraft.util.SoundEvent(new ResourceLocation("lepidodendron", "wet_crunch_plants")));
 		sounds.put(new ResourceLocation("lepidodendron", "dry_crunch_plants"),
 				new net.minecraft.util.SoundEvent(new ResourceLocation("lepidodendron", "dry_crunch_plants")));
+		sounds.put(new ResourceLocation("lepidodendron", "open_drawer"),
+				new net.minecraft.util.SoundEvent(new ResourceLocation("lepidodendron", "open_drawer")));
+		sounds.put(new ResourceLocation("lepidodendron", "close_drawer"),
+				new net.minecraft.util.SoundEvent(new ResourceLocation("lepidodendron", "close_drawer")));
 		sounds.put(new ResourceLocation("lepidodendron", "respawner"),
 				new net.minecraft.util.SoundEvent(new ResourceLocation("lepidodendron", "respawner")));
 		sounds.put(new ResourceLocation("lepidodendron", "time_researcher_crusher"),
@@ -1521,6 +1525,12 @@ public class ElementsLepidodendronMod implements IFuelHandler, IWorldGenerator {
 			if (id == GUITimeResearcherFinder.GUIID) {
 				return new GUITimeResearcherFinder.GUILepidodendronTimeResearcherFinder(world, x, y, z, player);
 			}
+			if (id == GUIArchiveSorterTop.GUIID) {
+				return new GUIArchiveSorterTop.GUILepidodendronArchiveSorterTop(world, x, y, z, player);
+			}
+			if (id == GUIArchiveSorterBottom.GUIID) {
+				return new GUIArchiveSorterBottom.GUILepidodendronArchiveSorterBottom(world, x, y, z, player);
+			}
 			return null;
 		}
 
@@ -1570,6 +1580,12 @@ public class ElementsLepidodendronMod implements IFuelHandler, IWorldGenerator {
 			}
 			if (id == GUITimeResearcherFinder.GUIID) {
 				return new GUITimeResearcherFinder.GuiWindow(world, x, y, z, player);
+			}
+			if (id == GUIArchiveSorterTop.GUIID) {
+				return new GUIArchiveSorterTop.GuiWindow(world, x, y, z, player);
+			}
+			if (id == GUIArchiveSorterBottom.GUIID) {
+				return new GUIArchiveSorterBottom.GuiWindow(world, x, y, z, player);
 			}
 			return null;
 		}

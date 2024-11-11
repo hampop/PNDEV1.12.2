@@ -2509,7 +2509,22 @@ public class LepidodendronMod {
 	public static final ResourceLocation KNOETSCHKESUCHUS_LOOT = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/knoetschkesuchus"));
 	public static final int ENTITY_TROPIDOSUCHUS = 1014;
 	public static final ResourceLocation TROPIDOSUCHUS_LOOT = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/tropidosuchus"));
+	public static final int ENTITY_DRACORAPTOR = 1019;
+	public static final ResourceLocation DRACORAPTOR_LOOT = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/dracoraptor"));
+	public static final ResourceLocation DRACORAPTOR_LOOT_YOUNG = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/dracoraptor_young"));
+	public static final int ENTITY_KANNEMEYERIA = 1016;
+	public static final ResourceLocation KANNEMEYERIA_LOOT = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/kannemeyeria"));
+	public static final ResourceLocation KANNEMEYERIA_LOOT_YOUNG = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/kannemeyeria_young"));
+	public static final int ENTITY_PRESTOSUCHUS = 1017;
+	public static final ResourceLocation PRESTOSUCHUS_LOOT = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/prestosuchus"));
+	public static final ResourceLocation PRESTOSUCHUS_LOOT_YOUNG = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/prestosuchus_young"));
+	public static final int ENTITY_TRILOPHOSAURUS = 1018;
+	public static final ResourceLocation TRILOPHOSAURUS_LOOT = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/trilophosaurus"));
+	public static final ResourceLocation TRILOPHOSAURUS_LOOT_YOUNG = LootTableList.register(new ResourceLocation(LepidodendronMod.MODID, "entity/trilophosaurus_young"));
+
 	public static final int ENTITY_MYRIAPOD = 1015;
+	public static final int GUI_ARCHIVE_SORTER_TOP_ID = 1016;
+	public static final int GUI_ARCHIVE_SORTER_BOTTOM_ID = 1017;
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
@@ -2553,6 +2568,12 @@ public class LepidodendronMod {
 		elements.addNetworkMessage(GUITimeResearcher.GUISlotChangedMessageHandler.class, GUITimeResearcher.GUISlotChangedMessage.class, Side.SERVER);
 		elements.addNetworkMessage(GUITrapWater.GUIButtonPressedMessageHandler.class, GUITrapWater.GUIButtonPressedMessage.class, Side.SERVER);
 		elements.addNetworkMessage(GUITrapWater.GUISlotChangedMessageHandler.class, GUITrapWater.GUISlotChangedMessage.class, Side.SERVER);
+		elements.addNetworkMessage(GUIArchiveSorterTop.GUIArchiveSorterTopMessageHandler.class, GUIArchiveSorterTop.GUIArchiveSorterTopMessage.class, Side.SERVER);
+		elements.addNetworkMessage(GUIArchiveSorterBottom.GUIArchiveSorterLockMessageHandler.class, GUIArchiveSorterBottom.GUIArchiveSorterLockMessage.class, Side.SERVER);
+		elements.addNetworkMessage(GUIArchiveSorterBottom.GUIArchiveSorterSearchMessageHandler.class, GUIArchiveSorterBottom.GUIArchiveSorterSearchMessage.class, Side.SERVER);
+		elements.addNetworkMessage(GUIArchiveSorterBottom.GUIArchiveSorterSearchStringMessageHandler.class, GUIArchiveSorterBottom.GUIArchiveSorterSearchStringMessage.class, Side.SERVER);
+		elements.addNetworkMessage(GUIArchiveSorterBottom.ArchiveSorterInGUIMessageHandler.class, GUIArchiveSorterBottom.GUIArchiveSorterInGUIMessage.class, Side.SERVER);
+		elements.addNetworkMessage(GUIMicroscope.GUIMicroscopeTagSelectMessageHandler.class, GUIMicroscope.GUIMicroscopeTagSelectMessage.class, Side.SERVER);
 		MinecraftForge.EVENT_BUS.register(elements);
 		elements.getElements().forEach(element -> element.preInit(event));
 		EntityRegistries.registerEntities();

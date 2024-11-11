@@ -2,18 +2,25 @@
 package net.lepidodendron.block;
 
 import net.lepidodendron.ElementsLepidodendronMod;
+import net.lepidodendron.LepidodendronConfig;
 import net.lepidodendron.LepidodendronMod;
 import net.lepidodendron.LepidodendronSorter;
+import net.lepidodendron.block.base.IArchiveInvertebrate;
+import net.lepidodendron.block.base.IArchivePlant;
+import net.lepidodendron.block.base.IArchiveStatic;
+import net.lepidodendron.block.base.IArchiveVertebrate;
 import net.lepidodendron.creativetab.TabLepidodendronBuilding;
 import net.lepidodendron.gui.GUIMicroscope;
 import net.lepidodendron.item.*;
 import net.lepidodendron.util.AcidBathOutputPlants;
+import net.lepidodendron.util.IDimensionRestricted;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDirectional;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
@@ -41,6 +48,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -78,6 +87,7 @@ public class BlockMicroscope extends ElementsLepidodendronMod.ModElement {
 
 	public static class BlockCustom extends Block {
 		public static final PropertyDirection FACING = BlockDirectional.FACING;
+		public static final PropertyBool RF = PropertyBool.create("rf");
 
 		public BlockCustom() {
 			super(Material.IRON);
@@ -89,6 +99,11 @@ public class BlockMicroscope extends ElementsLepidodendronMod.ModElement {
 			setLightOpacity(0);
 			setCreativeTab(TabLepidodendronBuilding.tab);
 			this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
+		}
+
+		@Override
+		public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+			return state.withProperty(RF, LepidodendronConfig.machinesRF);
 		}
 
 		@Override
@@ -157,7 +172,7 @@ public class BlockMicroscope extends ElementsLepidodendronMod.ModElement {
 
 		@Override
 		protected net.minecraft.block.state.BlockStateContainer createBlockState() {
-			return new net.minecraft.block.state.BlockStateContainer(this, new IProperty[]{FACING});
+			return new net.minecraft.block.state.BlockStateContainer(this, new IProperty[]{FACING, RF});
 		}
 
 		@Override
@@ -209,15 +224,23 @@ public class BlockMicroscope extends ElementsLepidodendronMod.ModElement {
 		}
 	}
 
-	public static class TileEntityMicroscope extends TileEntityLockableLoot implements ITickable, ISidedInventory {
+	public static class TileEntityMicroscope extends TileEntityLockableLoot implements ITickable, ISidedInventory, IEnergyStorage {
 		private NonNullList<ItemStack> forgeContents = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
 
 		protected boolean isProcessing;
 		public int processTick;
 		private int processTickTime = 20;
+		protected int periodLock;
+		private int minEnergyNeeded = 600;
 
 		public boolean canStartProcess() {
 
+			if (LepidodendronConfig.machinesRF) {
+				if (!this.hasEnergy(minEnergyNeeded)) {
+					return false;
+				}
+			}
+			
 			if (this.isProcessing) {
 				return false;
 			}
@@ -259,103 +282,254 @@ public class BlockMicroscope extends ElementsLepidodendronMod.ModElement {
 				return;
 			}
 
-			boolean updated = false;
-
-			if (this.canStartProcess()) {
-				this.processTick = 0;
-				this.isProcessing = true;
-				updated = true;
-			}
-
-			if (this.isProcessing) {
-				this.processTick ++;
-				updated = true;
-			}
-
-			if (this.isProcessing && this.processTick > this.processTickTime) {
-				//System.err.println("Ending process");
-				this.processTick = 0;
-				this.isProcessing = false;
-				//move to output:
-				String type = "";
-				if (isItemValidForSlot(0, this.getStackInSlot(0))
-					&& getStackInSlot(1).isEmpty()) {
-					ItemStack stackProcessing = this.getStackInSlot(0);
-					ItemStack outputStack = stackProcessing.copy();
-					outputStack.setCount(1);
-					stackProcessing.shrink(1);
-
-					//Has this already been tagged somehow?
-					if (outputStack.hasTagCompound()) {
-						if (outputStack.getTagCompound().hasKey("PFPlant")) {
-							NBTTagCompound plantNBT = new NBTTagCompound();
-							plantNBT.setString("id", "");
-							NBTTagCompound stackNBT = new NBTTagCompound();
-							stackNBT.setTag("PFPlant", plantNBT);
-							outputStack.setTagCompound(stackNBT);
-							world.playSound(null, pos, SoundEvents.BLOCK_NOTE_PLING, SoundCategory.BLOCKS, 0.2F, 1.0F + (this.getWorld().rand.nextFloat() - this.getWorld().rand.nextFloat()) * 0.4F);
-							this.setInventorySlotContents(1, outputStack);
-							markDirty();
-							updated = true;
-							return;
-						}
-						if (outputStack.getTagCompound().hasKey("PFMob")) {
-							NBTTagCompound plantNBT = new NBTTagCompound();
-							plantNBT.setString("id", "");
-							NBTTagCompound stackNBT = new NBTTagCompound();
-							stackNBT.setTag("PFMob", plantNBT);
-							outputStack.setTagCompound(stackNBT);
-							world.playSound(null, pos, SoundEvents.BLOCK_NOTE_PLING, SoundCategory.BLOCKS, 0.2F, 1.0F + (this.getWorld().rand.nextFloat() - this.getWorld().rand.nextFloat()) * 0.4F);
-							this.setInventorySlotContents(1, outputStack);
-							markDirty();
-							updated = true;
-							return;
-						}
-						if (outputStack.getTagCompound().hasKey("PFStatic")) {
-							NBTTagCompound plantNBT = new NBTTagCompound();
-							plantNBT.setString("id", "");
-							NBTTagCompound stackNBT = new NBTTagCompound();
-							stackNBT.setTag("PFStatic", plantNBT);
-							outputStack.setTagCompound(stackNBT);
-							world.playSound(null, pos, SoundEvents.BLOCK_NOTE_PLING, SoundCategory.BLOCKS, 0.2F, 1.0F + (this.getWorld().rand.nextFloat() - this.getWorld().rand.nextFloat()) * 0.4F);
-							this.setInventorySlotContents(1, outputStack);
-							markDirty();
-							updated = true;
-							return;
+			if (LepidodendronConfig.machinesRF) {
+				TileEntity tileEntity = world.getTileEntity(this.pos);
+				if (tileEntity instanceof BlockMicroscope.TileEntityMicroscope) {
+					BlockMicroscope.TileEntityMicroscope te = (BlockMicroscope.TileEntityMicroscope) tileEntity;
+					if (te.getEnergyStored() < te.getMaxEnergyStored()) {
+						//Is there a power-supplying block in the right place?
+						EnumFacing facing = this.getWorld().getBlockState(this.getPos()).getValue(BlockMicroscope.BlockCustom.FACING);
+						BlockPos powerBlockPos = this.pos.offset(facing.getOpposite());
+						TileEntity teStorage = this.getWorld().getTileEntity(powerBlockPos);
+						if (teStorage != null) {
+							IEnergyStorage powerBlockStorage = teStorage.getCapability(CapabilityEnergy.ENERGY, facing);
+							if (powerBlockStorage != null) {
+								if (powerBlockStorage.canExtract()) {
+									int energyTransferOut = powerBlockStorage.extractEnergy(this.maxReceive, true);
+									int energyTransferIn = this.receiveEnergy(energyTransferOut, true);
+									powerBlockStorage.extractEnergy(energyTransferIn, false);
+									this.receiveEnergy(energyTransferIn, false);
+									this.getWorld().notifyBlockUpdate(this.getPos(), this.getWorld().getBlockState(this.getPos()), this.getWorld().getBlockState(this.getPos()), 3);
+								}
+							}
 						}
 					}
+				}
+			}
 
-					//Copied logic from AcidBathUp:
-					if (Math.random() > 0.55) { //Plants:
-						if ((outputStack.getItem() == ItemFossilPrecambrian.block && (!(AcidBathOutputPlants.getPrecambrianCleanedFossilsPlants().length >= 1)))
-								|| (outputStack.getItem() == ItemFossilCambrian.block && (!(AcidBathOutputPlants.getCambrianCleanedFossilsPlants().length >= 1)))
-						) {
+			if (this.inputType(this.getStackInSlot(0)) == 1) {
+				//Analysing raw fossils to get the mob type from them:
+				boolean updated = false;
+				setPeriodLock(0, false);
+
+				if (this.canStartProcess()) {
+					this.processTick = 0;
+					this.isProcessing = true;
+					updated = true;
+				}
+
+				if (this.isProcessing && this.hasEnergy(minEnergyNeeded)) {
+					this.processTick++;
+					this.drainEnergy(80);
+					updated = true;
+				}
+
+				if (this.isProcessing && this.processTick > this.processTickTime) {
+					//System.err.println("Ending process");
+					this.processTick = 0;
+					this.isProcessing = false;
+					this.periodLock = 0;
+					//move to output:
+					String type = "";
+					if (isItemValidForSlot(0, this.getStackInSlot(0))
+							&& getStackInSlot(1).isEmpty()) {
+						ItemStack stackProcessing = this.getStackInSlot(0);
+						ItemStack outputStack = stackProcessing.copy();
+						outputStack.setCount(1);
+						stackProcessing.shrink(1);
+
+						//Has this already been tagged somehow?
+						if (outputStack.hasTagCompound()) {
+							if (outputStack.getTagCompound().hasKey("PFPlant")) {
+								NBTTagCompound plantNBT = new NBTTagCompound();
+								plantNBT.setString("id", "");
+								NBTTagCompound stackNBT = new NBTTagCompound();
+								stackNBT.setTag("PFPlant", plantNBT);
+								outputStack.setTagCompound(stackNBT);
+								world.playSound(null, pos, SoundEvents.BLOCK_NOTE_PLING, SoundCategory.BLOCKS, 0.2F, 1.0F + (this.getWorld().rand.nextFloat() - this.getWorld().rand.nextFloat()) * 0.4F);
+								this.setInventorySlotContents(1, outputStack);
+								markDirty();
+								updated = true;
+								return;
+							}
+							if (outputStack.getTagCompound().hasKey("PFMob")) {
+								NBTTagCompound plantNBT = new NBTTagCompound();
+								plantNBT.setString("id", "");
+								NBTTagCompound stackNBT = new NBTTagCompound();
+								stackNBT.setTag("PFMob", plantNBT);
+								outputStack.setTagCompound(stackNBT);
+								world.playSound(null, pos, SoundEvents.BLOCK_NOTE_PLING, SoundCategory.BLOCKS, 0.2F, 1.0F + (this.getWorld().rand.nextFloat() - this.getWorld().rand.nextFloat()) * 0.4F);
+								this.setInventorySlotContents(1, outputStack);
+								markDirty();
+								updated = true;
+								return;
+							}
+							if (outputStack.getTagCompound().hasKey("PFStatic")) {
+								NBTTagCompound plantNBT = new NBTTagCompound();
+								plantNBT.setString("id", "");
+								NBTTagCompound stackNBT = new NBTTagCompound();
+								stackNBT.setTag("PFStatic", plantNBT);
+								outputStack.setTagCompound(stackNBT);
+								world.playSound(null, pos, SoundEvents.BLOCK_NOTE_PLING, SoundCategory.BLOCKS, 0.2F, 1.0F + (this.getWorld().rand.nextFloat() - this.getWorld().rand.nextFloat()) * 0.4F);
+								this.setInventorySlotContents(1, outputStack);
+								markDirty();
+								updated = true;
+								return;
+							}
+						}
+
+						//Copied logic from AcidBathUp:
+						if (Math.random() > 0.55) { //Plants:
+							if ((outputStack.getItem() == ItemFossilPrecambrian.block && (!(AcidBathOutputPlants.getPrecambrianCleanedFossilsPlants().length >= 1)))
+									|| (outputStack.getItem() == ItemFossilCambrian.block && (!(AcidBathOutputPlants.getCambrianCleanedFossilsPlants().length >= 1)))
+							) {
+								type = "PFStatic";
+							} else {
+								type = "PFPlant";
+							}
+						} else if (Math.random() > 0.4) { //Mobs:
+							type = "PFMob";
+						} else { //Static creatures
 							type = "PFStatic";
 						}
-						else {
-							type = "PFPlant";
-						}
-					} else if (Math.random() > 0.4) { //Mobs:
-						type = "PFMob";
-					} else { //Static creatures
-						type = "PFStatic";
+						NBTTagCompound plantNBT = new NBTTagCompound();
+						plantNBT.setString("id", "");
+						NBTTagCompound stackNBT = new NBTTagCompound();
+						stackNBT.setTag(type, plantNBT);
+						outputStack.setTagCompound(stackNBT);
+						world.playSound(null, pos, SoundEvents.BLOCK_NOTE_PLING, SoundCategory.BLOCKS, 0.2F, 1.0F + (this.getWorld().rand.nextFloat() - this.getWorld().rand.nextFloat()) * 0.4F);
+						this.setInventorySlotContents(1, outputStack);
 					}
-					NBTTagCompound plantNBT = new NBTTagCompound();
-					plantNBT.setString("id", "");
-					NBTTagCompound stackNBT = new NBTTagCompound();
-					stackNBT.setTag(type, plantNBT);
-					outputStack.setTagCompound(stackNBT);
-					world.playSound(null, pos, SoundEvents.BLOCK_NOTE_PLING, SoundCategory.BLOCKS, 0.2F, 1.0F + (this.getWorld().rand.nextFloat() - this.getWorld().rand.nextFloat()) * 0.4F);
-					this.setInventorySlotContents(1, outputStack);
+					updated = true;
 				}
-				updated = true;
+
+				if (updated) {
+					this.notifyBlockUpdate();
+				}
+				markDirty();
 			}
 
-			if (updated) {
-				this.notifyBlockUpdate();
-			}
-			markDirty();
+			else if (this.inputType(this.getStackInSlot(0)) == 2) {
+				//Tagging with a period:
+				boolean updated = false;
 
+				if (this.canStartProcess() && this.periodLock != 0) {
+					this.processTick = 0;
+					this.isProcessing = true;
+					updated = true;
+				}
+
+				if (this.isProcessing) {
+					this.processTick++;
+					updated = true;
+				}
+
+				if (this.isProcessing && this.processTick > this.processTickTime) {
+					//System.err.println("Ending process");
+					this.processTick = 0;
+					this.isProcessing = false;
+					//move to output:
+					if (isItemValidForSlot(0, this.getStackInSlot(0))
+							&& getStackInSlot(1).isEmpty()) {
+						ItemStack stackProcessing = this.getStackInSlot(0);
+						ItemStack outputStack = stackProcessing.copy();
+						outputStack.setCount(1);
+						stackProcessing.shrink(1);
+						if (outputStack.hasTagCompound()) {
+							if ((!outputStack.getTagCompound().hasKey("period")) && this.periodLock != 0) {
+								outputStack.getTagCompound().setInteger("period", this.periodLock);
+							}
+							if ((!outputStack.getTagCompound().hasKey("PFMob"))
+									&& (!outputStack.getTagCompound().hasKey("PFStatic"))
+									&& (!outputStack.getTagCompound().hasKey("PFPlant"))) {
+								if (outputStack.getItem() instanceof IArchiveVertebrate
+									|| Block.getBlockFromItem(outputStack.getItem()) instanceof IArchiveVertebrate) {
+									NBTTagCompound entityNBT = new NBTTagCompound();
+									entityNBT.setString("id", "");
+									outputStack.getTagCompound().setTag("PFMob", entityNBT);
+									outputStack.getTagCompound().setString("mobtype", "vertebrate");
+								}
+								if (outputStack.getItem() instanceof IArchiveInvertebrate
+										|| Block.getBlockFromItem(outputStack.getItem()) instanceof IArchiveInvertebrate) {
+									NBTTagCompound entityNBT = new NBTTagCompound();
+									entityNBT.setString("id", "");
+									outputStack.getTagCompound().setTag("PFMob", entityNBT);
+									outputStack.getTagCompound().setString("mobtype", "invertebrate");
+								}
+								if (outputStack.getItem() instanceof IArchiveStatic
+										|| Block.getBlockFromItem(outputStack.getItem()) instanceof IArchiveStatic) {
+									NBTTagCompound entityNBT = new NBTTagCompound();
+									entityNBT.setString("id", "");
+									outputStack.getTagCompound().setTag("PFStatic", entityNBT);
+								}
+								if (outputStack.getItem() instanceof IArchivePlant
+										|| Block.getBlockFromItem(outputStack.getItem()) instanceof IArchivePlant) {
+									NBTTagCompound entityNBT = new NBTTagCompound();
+									entityNBT.setString("id", "");
+									outputStack.getTagCompound().setTag("PFPlant", entityNBT);
+								}
+							}
+						}
+						else {
+							NBTTagCompound compound = new NBTTagCompound();
+							compound.setInteger("period", this.periodLock);
+							outputStack.setTagCompound(compound);
+							if (outputStack.getItem() instanceof IArchiveVertebrate
+									|| Block.getBlockFromItem(outputStack.getItem()) instanceof IArchiveVertebrate) {
+								NBTTagCompound entityNBT = new NBTTagCompound();
+								entityNBT.setString("id", "");
+								outputStack.getTagCompound().setTag("PFMob", entityNBT);
+								outputStack.getTagCompound().setString("mobtype", "vertebrate");
+							}
+							if (outputStack.getItem() instanceof IArchiveInvertebrate
+									|| Block.getBlockFromItem(outputStack.getItem()) instanceof IArchiveInvertebrate) {
+								NBTTagCompound entityNBT = new NBTTagCompound();
+								entityNBT.setString("id", "");
+								outputStack.getTagCompound().setTag("PFMob", entityNBT);
+								outputStack.getTagCompound().setString("mobtype", "invertebrate");
+							}
+							if (outputStack.getItem() instanceof IArchiveStatic
+									|| Block.getBlockFromItem(outputStack.getItem()) instanceof IArchiveStatic) {
+								NBTTagCompound entityNBT = new NBTTagCompound();
+								entityNBT.setString("id", "");
+								outputStack.getTagCompound().setTag("PFStatic", entityNBT);
+							}
+							if (outputStack.getItem() instanceof IArchivePlant
+									|| Block.getBlockFromItem(outputStack.getItem()) instanceof IArchivePlant) {
+								NBTTagCompound entityNBT = new NBTTagCompound();
+								entityNBT.setString("id", "");
+								outputStack.getTagCompound().setTag("PFPlant", entityNBT);
+							}
+						}
+						BlockArchiveSorterTop.TileEntityArchiveSorterTop.tagFossilFully(world, outputStack);
+						world.playSound(null, pos, SoundEvents.BLOCK_NOTE_PLING, SoundCategory.BLOCKS, 0.2F, 1.0F + (this.getWorld().rand.nextFloat() - this.getWorld().rand.nextFloat()) * 0.4F);
+						this.setInventorySlotContents(1, outputStack);
+						markDirty();
+						updated = true;
+						this.periodLock = 0;
+					}
+				}
+
+				if (updated) {
+					this.notifyBlockUpdate();
+				}
+				markDirty();
+			}
+			else {
+				setPeriodLock(0, true);
+			}
+		}
+
+		public void setPeriodLock(int period, boolean resetTicks) {
+			periodLock = period;
+			if (resetTicks) {
+				this.processTick = 0;
+				this.isProcessing = false;
+			}
+		}
+
+		public int getPeriodLock() {
+			return this.periodLock;
 		}
 
 		public boolean getProcessing() {
@@ -391,6 +565,10 @@ public class BlockMicroscope extends ElementsLepidodendronMod.ModElement {
 		@Override
 		public void readFromNBT(NBTTagCompound compound) {
 			super.readFromNBT(compound);
+			if (compound.hasKey("energystored")) {
+				this.energy = compound.getInteger("energystored");
+			}
+			this.periodLock = compound.getInteger("periodLock");
 			if (compound.hasKey("processTick")) {
 				this.processTick = compound.getInteger("processTick");
 			}
@@ -406,8 +584,10 @@ public class BlockMicroscope extends ElementsLepidodendronMod.ModElement {
 		@Override
 		public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 			super.writeToNBT(compound);
+			compound.setInteger("energystored", this.energy);
 			compound.setBoolean("isProcessing", this.isProcessing);
 			compound.setInteger("processTick", this.processTick);
+			compound.setInteger("periodLock", this.periodLock);
 			if (!this.checkLootAndWrite(compound)) {
 				ItemStackHelper.saveAllItems(compound, this.forgeContents);
 			}
@@ -490,28 +670,48 @@ public class BlockMicroscope extends ElementsLepidodendronMod.ModElement {
 		@Override
 		public boolean isItemValidForSlot(int index, ItemStack stack) {
 			if (index == 0) {
-				Item item = stack.getItem();
-				if (item == ItemFossilPrecambrian.block
-						|| item == ItemFossilCambrian.block
-						|| item == ItemFossilOrdovician.block
-						|| item == ItemFossilSilurian.block
-						|| item == ItemFossilDevonian.block
-						|| item == ItemFossilCarboniferous.block
-						|| item == ItemFossilPermian.block
-						|| item == ItemFossilTriassic.block
-						|| item == ItemFossilJurassic.block
-						|| item == ItemFossilCretaceous.block
-						|| item == ItemFossilPaleogene.block
-						|| item == ItemFossilNeogene.block
-						|| item == ItemFossilPleistocene.block) {
-					return true;
-				}
-				return false;
+				return (inputType(stack) > 0);
 			}
 			if (index == 1)
 				return false;
 
 			return false;
+		}
+
+		public static int inputType(ItemStack stack) {
+			Item item = stack.getItem();
+			if (item == ItemFossilPrecambrian.block
+					|| item == ItemFossilCambrian.block
+					|| item == ItemFossilOrdovician.block
+					|| item == ItemFossilSilurian.block
+					|| item == ItemFossilDevonian.block
+					|| item == ItemFossilCarboniferous.block
+					|| item == ItemFossilPermian.block
+					|| item == ItemFossilTriassic.block
+					|| item == ItemFossilJurassic.block
+					|| item == ItemFossilCretaceous.block
+					|| item == ItemFossilPaleogene.block
+					|| item == ItemFossilNeogene.block
+					|| item == ItemFossilPleistocene.block) {
+				return 1;
+			}
+			if (stack.hasTagCompound()) {
+				if (stack.getTagCompound().hasKey("period")) {
+					return 0;
+				}
+				if (stack.getTagCompound().hasKey("PFMob")
+						|| stack.getTagCompound().hasKey("PFStatic")
+						|| stack.getTagCompound().hasKey("PFPlant")) {
+					return 2;
+				}
+			}
+			if (stack.getItem() instanceof IDimensionRestricted) {
+				return 2;
+			}
+			if (Block.getBlockFromItem(stack.getItem()) instanceof IDimensionRestricted) {
+				return 2;
+			}
+			return 0;
 		}
 
 		net.minecraftforge.items.IItemHandler handlerUp = new net.minecraftforge.items.wrapper.SidedInvWrapper(this, EnumFacing.UP);
@@ -546,6 +746,114 @@ public class BlockMicroscope extends ElementsLepidodendronMod.ModElement {
 
 			}
 			return super.getCapability(capability, facing);
+		}
+
+		public void drainEnergy(int energy) {
+			TileEntity tileEntity = world.getTileEntity(this.getPos());
+			if (tileEntity != null) {
+				if (tileEntity instanceof BlockMicroscope.TileEntityMicroscope) {
+					BlockMicroscope.TileEntityMicroscope te = (BlockMicroscope.TileEntityMicroscope) tileEntity;
+					te.extractEnergy(energy,false);
+				}
+			}
+		}
+
+		public boolean hasEnergy(int minEnergy) {
+			if (!LepidodendronConfig.machinesRF) {
+				return true;
+			}
+			TileEntity tileEntity = world.getTileEntity(this.getPos());
+			if (tileEntity != null) {
+				if (tileEntity instanceof BlockMicroscope.TileEntityMicroscope) {
+					BlockMicroscope.TileEntityMicroscope te = (BlockMicroscope.TileEntityMicroscope) tileEntity;
+					return te.getEnergyStored() > minEnergy;
+				}
+			}
+			return false;
+		}
+
+		//Energy addin:
+		//-------------
+		protected int energy;
+		protected int capacity = 10000;
+		protected int maxReceive = 1000;
+		protected int maxExtract = 500;
+
+		@Override
+		public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+			IBlockState blockstate = this.getWorld().getBlockState(this.getPos());
+			if (blockstate != null) {
+				if (blockstate.getBlock() == BlockMicroscope.block) {
+					EnumFacing blockFacing = this.getWorld().getBlockState(this.getPos()).getValue(BlockMicroscope.BlockCustom.FACING).getOpposite();
+					if (capability == CapabilityEnergy.ENERGY && facing == blockFacing) {
+						return true;
+					}
+				}
+			}
+			return super.hasCapability(capability, facing);
+		}
+
+		@Override
+		public int receiveEnergy(int maxReceive, boolean simulate)
+		{
+			if (!canReceive())
+				return 0;
+
+			int energyReceived = Math.min(capacity - energy, Math.min(this.maxReceive, maxReceive));
+			if (!simulate) {
+				energy += energyReceived;
+				if (energyReceived > 0) {
+					this.getWorld().notifyBlockUpdate(this.getPos(), this.getWorld().getBlockState(this.getPos()), this.getWorld().getBlockState(this.getPos()), 3);
+				}
+			}
+			return energyReceived;
+		}
+
+		@Override
+		public int extractEnergy(int maxExtract, boolean simulate)
+		{
+			if (!canExtract())
+				return 0;
+
+			int energyExtracted = Math.min(energy, Math.min(this.maxExtract, maxExtract));
+			if (!simulate) {
+				energy -= energyExtracted;
+				if (energyExtracted > 0) {
+					this.getWorld().notifyBlockUpdate(this.getPos(), this.getWorld().getBlockState(this.getPos()), this.getWorld().getBlockState(this.getPos()), 3);
+				}
+			}
+			return energyExtracted;
+		}
+
+		@Override
+		public int getEnergyStored()
+		{
+			return energy;
+		}
+
+		@Override
+		public int getMaxEnergyStored()
+		{
+			return capacity;
+		}
+
+		@Override
+		public boolean canExtract()
+		{
+			return this.maxExtract > 0;
+		}
+
+		@Override
+		public boolean canReceive()
+		{
+			return this.maxReceive > 0;
+		}
+
+		public double getEnergyFraction() {
+			if (this.capacity > 0) {
+				return ((double) this.energy) / ((double) this.capacity);
+			}
+			return 0;
 		}
 
 	}
