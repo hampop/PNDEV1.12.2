@@ -7,6 +7,9 @@ import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.lepidodendron.LepidodendronConfig;
 import net.lepidodendron.block.*;
 import net.lepidodendron.block.base.BlockLogPF;
+import net.lepidodendron.entity.base.EntityPrehistoricFloraCrawlingFlyingInsectBase;
+import net.lepidodendron.entity.base.EntityPrehistoricFloraInsectFlyingBase;
+import net.lepidodendron.entity.base.EntityPrehistoricFloraLandClimbingFlyingWalkingBase;
 import net.lepidodendron.world.biome.cretaceous.BiomeCretaceousEarly;
 import net.lepidodendron.world.biome.jurassic.BiomeJurassic;
 import net.minecraft.block.Block;
@@ -15,10 +18,12 @@ import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -28,6 +33,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import javax.annotation.Nullable;
@@ -83,7 +89,7 @@ public class Functions {
             portalBlockState = BlockArchaeopterisPlanks.block.getDefaultState();
         }
         if (lastDimension == LepidodendronConfig.dimCarboniferous) {
-            portalBlockState = BlockCalamitesPlanks.block.getDefaultState();
+            portalBlockState = BlockPortalBlockCarboniferous.block.getDefaultState();
         }
         if (lastDimension == LepidodendronConfig.dimPermian) {
             portalBlockState = BlockGlossopterisPlanks.block.getDefaultState();
@@ -531,6 +537,49 @@ public class Functions {
         }
 
         return tmpArray;
+    }
+
+    @Nullable
+    public static SoundEvent getDimensionLivingSound(int dim, World worldIn) {
+        SoundEvent soundEventOut = null;
+        for (int i = 0; i <= 2; i++) {
+            if (soundEventOut != null) {
+                break;
+            }
+            String resourceLocation = AcidBathOutputMobs.resLocMobs(dim);
+            if (resourceLocation != null && !resourceLocation.equalsIgnoreCase("")) {
+                if (resourceLocation.contains("@")) {
+                    resourceLocation = resourceLocation.substring(0, resourceLocation.indexOf("@"));
+                }
+                EntityEntry ee = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(resourceLocation));
+                EntityLiving entity = (EntityLiving) ee.newInstance(worldIn);
+                if (entity != null) {
+                    try { //Uggggh, reflection :(
+                        Method method = entity.getClass().getDeclaredMethod("func_184639_G"); //"getAmbientSound"
+                        method.setAccessible(true);
+                        soundEventOut = (SoundEvent) method.invoke(entity);
+                    } catch (Exception err1) {
+                        try { //Uggggh, reflection :(
+                            Method method = entity.getClass().getDeclaredMethod("getAmbientSound");
+                            method.setAccessible(true);
+                            soundEventOut = (SoundEvent) method.invoke(entity);
+                        } catch (Exception err2) {
+                        }
+                    }
+                    if (soundEventOut == null) {
+                        if (entity instanceof EntityPrehistoricFloraInsectFlyingBase) {
+                            soundEventOut = ((EntityPrehistoricFloraInsectFlyingBase) entity).getFlightSound();
+                        } else if (entity instanceof EntityPrehistoricFloraLandClimbingFlyingWalkingBase) {
+                            soundEventOut = ((EntityPrehistoricFloraLandClimbingFlyingWalkingBase) entity).getFlightSound();
+                        } else if (entity instanceof EntityPrehistoricFloraCrawlingFlyingInsectBase) {
+                            soundEventOut = ((EntityPrehistoricFloraCrawlingFlyingInsectBase) entity).getFlightSound();
+                        }
+                    }
+                    entity.setDead();
+                }
+            }
+        }
+        return soundEventOut;
     }
 
 }
