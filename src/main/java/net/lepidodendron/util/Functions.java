@@ -217,8 +217,9 @@ public class Functions {
             BlockPos downPos = pos.down();
             IBlockState upState = worldIn.getBlockState(upPos);
             IBlockState downState = worldIn.getBlockState(downPos);
-
-            if (currentState.getValue(BlockDoublePlant.HALF) == BlockDoublePlant.EnumBlockHalf.LOWER) {
+            BlockDoublePlant.EnumBlockHalf currentHalf = currentState.getValue(BlockDoublePlant.HALF);
+            
+            if (currentHalf == BlockDoublePlant.EnumBlockHalf.LOWER) {
                 if (upState.getBlock() instanceof BlockDoublePlant && upState.getValue(BlockDoublePlant.HALF) == BlockDoublePlant.EnumBlockHalf.UPPER) {
                     worldIn.setBlockToAir(upPos);
                 }
