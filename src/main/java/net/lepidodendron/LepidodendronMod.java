@@ -12,6 +12,7 @@ import net.lepidodendron.item.crafting.RecipeCookedMeatsandSeeds;
 import net.lepidodendron.item.crafting.RecipeOresAndBlocks;
 import net.lepidodendron.pfvillagers.entity.VillagerPalaeobotanist;
 import net.lepidodendron.pfvillagers.entity.VillagerPalaeontologist;
+import net.lepidodendron.tileentity.TileEntityPortalBlock;
 import net.lepidodendron.util.ModTriggers;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
@@ -2525,6 +2526,7 @@ public class LepidodendronMod {
 	public static final int ENTITY_MYRIAPOD = 1015;
 	public static final int GUI_ARCHIVE_SORTER_TOP_ID = 1016;
 	public static final int GUI_ARCHIVE_SORTER_BOTTOM_ID = 1017;
+	public static final int GUI_LAB_CABINET_ID = 1018;
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
@@ -2587,6 +2589,7 @@ public class LepidodendronMod {
 				GameRegistry.registerTileEntity(BlockFlowerpotPN.TileEntityFlowerPotPN.class, "lepidodendron:tileentityflowerpotpn");
 			}
 		}
+		GameRegistry.registerTileEntity(TileEntityPortalBlock.class, "lepidodendron:tileentityportal_block");
 		elements.getElements().forEach(element -> element.init(event));
 		proxy.init(event);
 
